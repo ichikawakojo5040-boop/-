@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>合格ダッシュボード｜横浜市立大学 国際商学部</title>
+<style>
+  :root{
+    --bg-950:#020617; --bg-900:#0f172a; --bg-800:#1e293b; --bg-700:#334155;
+    --line-800:#1e293b; --line-700:#334155; --line-600:#475569;
+    --tx-100:#f1f5f9; --tx-200:#e2e8f0; --tx-300:#cbd5e1; --tx-400:#94a3b8; --tx-500:#64748b; --tx-600:#475569;
+    --cyan-400:#22d3ee; --cyan-500:#06b6d4; --cyan-600:#0891b2;
+    --emerald-400:#34d399; --emerald-500:#10b981; --emerald-600:#059669; --emerald-950:#022c22;
+    --red-400:#f87171; --amber-400:#fbbf24;
+    --orange-300:#fdba74; --orange-700:#c2410c; --orange-950:#431407;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg-950); color:var(--tx-200);
+    font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Yu Gothic',Meiryo,sans-serif;
+    display:flex; min-height:100vh;
+  }
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+
+  /* ---------- サイドバー ---------- */
+  #sidebar{
+    width:240px; flex-shrink:0; background:var(--bg-900);
+    border-right:1px solid var(--line-800); display:flex; flex-direction:column;
+    position:sticky; top:0; height:100vh;
+  }
+  .brand{ padding:20px 16px; border-bottom:1px solid var(--line-800); display:flex; gap:10px; align-items:center;}
+  .brand-icon{width:32px;height:32px;border-radius:8px;background:var(--cyan-600);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .brand-title{font-size:13px;font-weight:600;color:#fff;line-height:1.3;}
+  .brand-sub{font-size:11px;color:var(--tx-500);line-height:1.3;}
+
+  nav{flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:4px;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:none;border-radius:6px;
+    background:transparent;color:var(--tx-400);font-size:14px;text-align:left;transition:background .15s,color .15s;
+  }
+  .nav-item:hover{background:var(--bg-800);color:var(--tx-200);}
+  .nav-item.active{background:var(--bg-700);color:#fff;}
+  .nav-item .badge-count{margin-left:auto;font-size:11px;background:var(--bg-700);color:var(--tx-200);padding:1px 7px;border-radius:999px;}
+  .nav-item.active .badge-count{background:var(--bg-800);}
+
+  .countdown{padding:14px 16px;border-top:1px solid var(--line-800);font-size:11px;color:var(--tx-500);}
+  .countdown b{display:block;font-size:18px;color:var(--cyan-400);margin-top:2px;}
+
+  /* ---------- メイン ---------- */
+  #main{flex:1; overflow-y:auto; height:100vh;}
+  #content{max-width:1200px;margin:0 auto;padding:32px 36px;}
+
+  .section-head{margin-bottom:20px;}
+  .section-head h2{font-size:19px;font-weight:700;color:var(--tx-100);margin:0;}
+  .section-head p{font-size:13px;color:var(--tx-400);margin:4px 0 0;}
+
+  .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;}
+
+  .btn{border:none;border-radius:6px;padding:9px 16px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .btn-primary{background:var(--cyan-600);color:#fff;}
+  .btn-primary:hover{background:var(--cyan-500);}
+  .btn-success{background:var(--emerald-600);color:#fff;}
+  .btn-success:hover{background:var(--emerald-500);}
+  .btn-disabled{background:var(--bg-800);color:var(--tx-600);cursor:not-allowed;}
+  .btn-ghost{background:var(--bg-900);color:var(--tx-400);border:1px solid var(--line-700);}
+  .btn-ghost.active{background:var(--bg-700);color:#fff;}
+
+  /* ---------- テーブル ---------- */
+  .panel{border:1px solid var(--line-800);border-radius:10px;overflow:hidden;}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    background:var(--bg-900);color:var(--tx-500);font-size:11px;text-transform:uppercase;letter-spacing:.03em;
+    text-align:left;padding:11px 12px;white-space:nowrap;
+  }
+  tbody td{padding:11px 12px;vertical-align:top;border-top:1px solid var(--line-800);}
+  tbody tr:nth-child(odd){background:rgba(255,255,255,0.015);}
+  tbody tr.row-done{background:rgba(16,185,129,0.07);}
+
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:5px;border:1px solid;font-size:11px;font-weight:600;white-space:nowrap;}
+  .badge-date{display:inline-flex;align-items:center;padding:1px 7px;border-radius:5px;border:1px solid;font-size:10.5px;font-weight:600;margin-top:4px;}
+  .badge-carry{background:var(--orange-950);color:var(--orange-300);border-color:var(--orange-700);}
+  .badge-today{background:#083344;color:#67e8f9;border-color:#0e7490;}
+  .badge-future{background:var(--bg-800);color:var(--tx-500);border-color:var(--line-700);}
+
+  .subj-英語{background:#0c4a6e;color:#7dd3fc;border-color:#0369a1;}
+  .subj-数学{background:#4c1d95;color:#c4b5fd;border-color:#6d28d9;}
+  .subj-国語{background:#881337;color:#fda4af;border-color:#be123c;}
+  .subj-日本史{background:#78350f;color:#fcd34d;border-color:#b45309;}
+  .subj-政経{background:#064e3b;color:#6ee7b7;border-color:#047857;}
+  .subj-理科基礎{background:#134e4a;color:#5eead4;border-color:#0f766e;}
+  .subj-情報Ⅰ{background:#312e81;color:#a5b4fc;border-color:#4338ca;}
+  .subj-調整{background:var(--bg-700);color:var(--tx-300);border-color:var(--line-600);}
+
+  .chk-btn{background:none;border:none;padding:0;display:inline-flex;color:var(--tx-600);}
+  .chk-btn.checked{color:var(--emerald-400);}
+  .chk-btn:hover{color:var(--tx-400);}
+
+  input[type=text],input[type=number],input[type=date],textarea,select{
+    background:var(--bg-800);border:1px solid var(--line-700);border-radius:5px;color:var(--tx-100);
+    padding:6px 8px;font-size:12.5px;
+  }
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 1px var(--cyan-500);}
+  .w-full{width:100%;}
+  .actual-input{width:64px;text-align:center;}
+  .memo-input{width:100%;}
+  .kpi-text{color:var(--tx-400);font-size:12px;line-height:1.5;}
+  .del-btn{background:none;border:none;color:var(--tx-600);}
+  .del-btn:hover{color:var(--red-400);}
+
+  /* ---------- フォーム ---------- */
+  .add-form{margin-top:22px;border:1px solid var(--line-800);background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;}
+  .add-form-label{font-size:11px;color:var(--tx-500);text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px;}
+  .add-grid{display:grid;grid-template-columns:120px 90px 1fr 1.6fr 1.6fr 80px;gap:8px;}
+  .add-grid input,.add-grid select{width:100%;padding:9px 8px;font-size:13px;}
+
+  /* ---------- 模試カード ---------- */
+  .mock-card{border:1px solid var(--line-800);background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;margin-bottom:14px;}
+  .mock-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;}
+  .mock-name{font-weight:700;color:var(--tx-100);font-size:14.5px;}
+  .mock-date{font-size:11.5px;color:var(--tx-500);margin-top:2px;}
+  .mock-stats{display:flex;gap:20px;}
+  .mock-stat{text-align:right;}
+  .mock-stat span{display:block;font-size:10.5px;color:var(--tx-500);}
+  .mock-stat b{font-size:18px;color:var(--tx-100);}
+  .mock-stat b.negative{color:var(--red-400);}
+  .mock-stat b.positive{color:var(--emerald-400);}
+  .mock-scores{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px;}
+  .mock-scores label{font-size:10.5px;color:var(--tx-500);display:block;margin-bottom:3px;}
+  .mock-scores input{width:100%;text-align:center;}
+  .mock-notes{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .mock-notes label{font-size:10.5px;color:var(--tx-500);display:block;margin-bottom:3px;}
+  .mock-notes textarea{width:100%;resize:vertical;font-size:12px;min-height:44px;}
+
+  /* ---------- KPIマスタ ---------- */
+  .kpi-item{border:1px solid var(--line-800);border-radius:10px;overflow:hidden;margin-bottom:10px;}
+  .kpi-toggle{width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg-900);border:none;color:var(--tx-100);font-size:14px;font-weight:600;}
+  .kpi-toggle:hover{background:#182338;}
+  .kpi-toggle .chev{color:var(--tx-500);display:flex;}
+  .kpi-round{color:var(--cyan-400);font-weight:700;white-space:nowrap;}
+  .kpi-caution{color:#fcd34d;}
+
+  /* ---------- 週間/月間 ---------- */
+  .plan-tabs{display:flex;gap:8px;margin-bottom:14px;}
+  .week-scroll{max-height:620px;overflow-y:auto;}
+  thead.sticky th{position:sticky;top:0;z-index:1;}
+  .month-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .month-card{border:1px solid var(--line-800);background:rgba(255,255,255,0.02);border-radius:10px;padding:16px;}
+  .month-name{color:var(--cyan-400);font-size:13px;font-weight:700;margin-bottom:4px;}
+  .month-goal{color:var(--tx-100);font-weight:600;margin-bottom:4px;}
+  .month-detail{color:var(--tx-400);font-size:12px;line-height:1.5;}
+
+  .empty-state{padding:44px 20px;text-align:center;color:var(--tx-500);font-size:13px;background:rgba(255,255,255,0.02);}
+
+  @media(max-width:900px){
+    #sidebar{position:fixed;z-index:20;transform:translateX(-100%);transition:transform .2s;}
+    #sidebar.open{transform:translateX(0);}
+  }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5Z"/><path d="M6 12v5c0 1.66 3 3 6 3s6-1.34 6-3v-5"/></svg>
+    </div>
+    <div>
+      <div class="brand-title">合格ダッシュボード</div>
+      <div class="brand-sub">横浜市立大学 国際商学部</div>
+    </div>
+  </div>
+  <nav id="nav"></nav>
+  <div class="countdown">共通テスト本番まで<b id="countdown-days">- 日</b></div>
+</aside>
+
+<main id="main"><div id="content"></div></main>
+
+<script>
+/* ============================================================
+   データ定義
+   ============================================================ */
+const SUBJECTS = ["英語","数学","国語","日本史","政経","理科基礎","情報Ⅰ","調整"];
+const MOCK_SUBJECT_KEYS = ["英語","国語","数学","社会","理科","情報"];
+const STORAGE_KEYS = { tasks:"sd_tasks", history:"sd_history", mocks:"sd_mocks" };
+
+const ICONS = {
+  board:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>',
+  history:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>',
+  mock:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+  kpi:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  plan:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  plus:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  reset:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  trash:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  checkCircle:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  circle:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+  chevDown:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+  chevRight:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+};
+
+const DEFAULT_TASKS = [
+  {id:1,date:"2026-07-28",checked:false,subject:"英語",material:"LEAP",task:"No.1〜100 周回",kpi:"【1周目】暗記不要。見たことがある・発音・日本語意味の接触優先",target:30,actual:"",memo:""},
+  {id:2,date:"2026-07-28",checked:false,subject:"数学",material:"入門問題精講 ⅠA",task:"第1章 例題1〜例題5",kpi:"【1周目】丸暗記禁止。「なぜこの公式を使うか」の根拠を理解する",target:60,actual:"",memo:""},
+  {id:3,date:"2026-07-28",checked:false,subject:"国語",material:"古文単語330",task:"No.1〜30",kpi:"【1周目】1単語につき主要な意味を1つ「出会い」として確認",target:20,actual:"",memo:""},
+  {id:4,date:"2026-07-28",checked:false,subject:"国語",material:"富井の古典文法",task:"第1章〜第2章",kpi:"【1周目】助動詞の活用・接続の仕組みを理屈で理解する",target:30,actual:"",memo:""},
+  {id:5,date:"2026-07-28",checked:false,subject:"調整",material:"全科目",task:"本日間違えた問題の解き直し",kpi:"【復習】翌日・3日後・1週間後の復習サイクル実行",target:30,actual:"",memo:""},
+  {id:6,date:"2026-07-29",checked:false,subject:"英語",material:"LEAP",task:"No.101〜200 周回",kpi:"【1周目】暗記不要。接触重視",target:30,actual:"",memo:""},
+  {id:7,date:"2026-07-29",checked:false,subject:"英語",material:"大岩のいちばんはじめの英文法",task:"第4講〜第6講",kpi:"【1周目】「なぜこの形になるか」を他人に説明できる理解レベルにする",target:45,actual:"",memo:""},
+  {id:8,date:"2026-07-29",checked:false,subject:"数学",material:"入門問題精講 ⅠA",task:"第1章 例題6〜例題10",kpi:"【1周目】思考手順の整理",target:60,actual:"",memo:""},
+  {id:9,date:"2026-07-29",checked:false,subject:"国語",material:"古文単語330",task:"No.31〜60",kpi:"【1周目】出会い優先",target:20,actual:"",memo:""},
+  {id:10,date:"2026-07-29",checked:false,subject:"国語",material:"富井の古典文法",task:"第3章〜第4章",kpi:"【1周目】助動詞の仕組み理解",target:30,actual:"",memo:""},
+  {id:11,date:"2026-07-29",checked:false,subject:"日本史",material:"なぜと流れがわかる本",task:"第2章 飛鳥〜奈良時代",kpi:"【1周目】流れを掴む",target:40,actual:"",memo:""},
+  {id:12,date:"2026-07-29",checked:false,subject:"調整",material:"全科目",task:"NG問の解き直し",kpi:"【復習】復習サイクル",target:30,actual:"",memo:""},
+];
+
+const DEFAULT_MOCKS = [
+  {id:1,date:"2026-08-23",name:"第2回 全統共通テスト模試",scores:{英語:160,国語:90,数学:80,社会:90,理科:30,情報:30},target:600,
+   issues:"理科基礎・情報Ⅰの学習量不足。数学は時間切れによる失点あり。",
+   action:"理科基礎を毎日のタスクに固定枠として組み込む。数学は時間を計測して演習する。"},
+  {id:2,date:"2026-10-18",name:"第3回 全統共通テスト模試",scores:{英語:"",国語:"",数学:"",社会:"",理科:"",情報:""},target:680,issues:"",action:""},
+  {id:3,date:"2026-11-03",name:"全統プレ共通テスト",scores:{英語:"",国語:"",数学:"",社会:"",理科:"",情報:""},target:730,issues:"",action:""},
+  {id:4,date:"2027-01-16",name:"共通テスト本番",scores:{英語:"",国語:"",数学:"",社会:"",理科:"",情報:""},target:760,issues:"",action:""},
+];
+
+const KPI_MASTER = [
+  {material:"LEAP",subject:"英語",rounds:[
+    {round:"1周目",purpose:"単語と初接触し、見たことがある状態を作る",method:"暗記しようとせず、赤字の意味と発音を確認しながらテンポよく通読する",criteria:"収録語の8割に「見たことがある」感覚を持てる",caution:"1語に立ち止まらない。書き取りはしない"},
+    {round:"2周目",purpose:"意味の想起速度を上げる",method:"単語を見て日本語訳を3秒以内に言えるか確認し、言えないものにチェック",criteria:"7割の単語を3秒以内に想起できる",caution:"チェックが多い単語のみ復習リストへ回す"},
+    {round:"3周目",purpose:"完全定着・瞬間想起",method:"チェックが残った単語のみ集中周回し、例文で用法も確認する",criteria:"収録語の9割以上を1秒以内に想起できる",caution:"派生語・多義語の混同に注意する"},
+  ]},
+  {material:"入門問題精講 ⅠA",subject:"数学",rounds:[
+    {round:"1周目",purpose:"解法の根拠を理解する",method:"答えを見る前に自力で5分考え、その後解説で「なぜその公式か」を確認する",criteria:"各例題の解法の理由を自分の言葉で説明できる",caution:"丸暗記・パターン暗記は禁止"},
+    {round:"2周目",purpose:"自力で再現できるようにする",method:"解説を見ずに解答を再現し、詰まった箇所のみ確認する",criteria:"8割の例題を自力で完答できる",caution:"時間を計り、スピードも意識する"},
+    {round:"3周目",purpose:"制限時間内での完答・定着確認",method:"通し演習形式で解き、間違えた問題のみNG問リストへ",criteria:"9割以上を制限時間内に正答できる",caution:"NG問は解き直しサイクルに必ず組み込む"},
+  ]},
+  {material:"古文単語330",subject:"国語",rounds:[
+    {round:"1周目",purpose:"1語1義でまず出会う",method:"主要な意味を1つだけ確認し、テンポよく進める",criteria:"全単語に一通り目を通し終える",caution:"複数の意味を欲張って覚えようとしない"},
+    {round:"2周目",purpose:"意味の幅を広げる",method:"主要な意味に加え、頻出の第2義も確認する",criteria:"7割の単語で第1義を即答できる",caution:"古文特有のニュアンスを軽視しない"},
+    {round:"3周目",purpose:"文脈内での運用力を養う",method:"例文・過去問中で単語の意味を判断する練習を行う",criteria:"文中で単語の意味を即座に判断できる",caution:"現代語との意味のズレに注意する"},
+  ]},
+  {material:"富井の古典文法",subject:"国語",rounds:[
+    {round:"1周目",purpose:"助動詞の活用・接続を理屈で理解する",method:"暗記に頼らず、活用表の成り立ちを解説を読みながら理解する",criteria:"主要助動詞の接続ルールを自分の言葉で説明できる",caution:"表の丸暗記だけで終わらせない"},
+    {round:"2周目",purpose:"識別問題への応用力をつける",method:"活用形から助動詞を識別する演習を行う",criteria:"基本的な識別問題を8割正答できる",caution:"紛らわしい語（る・らる 等）を重点的に確認する"},
+    {round:"3周目",purpose:"読解の中での即時判断力を養う",method:"実際の古文文章中で文法事項をその都度確認する",criteria:"文章読解中に文法判断で止まらなくなる",caution:"文法の見落としが誤読に直結することを常に意識する"},
+  ]},
+  {material:"大岩のいちばんはじめの英文法",subject:"英語",rounds:[
+    {round:"1周目",purpose:"文構造がその形になる理由を理解する",method:"講義部分を読み、なぜその形になるか他人に説明できるか確認する",criteria:"各講の要点を自分の言葉で説明できる",caution:"感覚や暗記でなく、理屈で理解する"},
+    {round:"2周目",purpose:"問題演習で定着を確認する",method:"章末問題を解き、誤答は理由まで戻って確認する",criteria:"章末問題で8割正答できる",caution:"感覚で解かず、根拠を必ず言語化する"},
+    {round:"3周目",purpose:"総復習・弱点つぶし",method:"間違えた講のみ再読し、演習を解き直す",criteria:"全講の問題で9割正答できる",caution:"苦手な講に時間を優先的に配分する"},
+  ]},
+  {material:"なぜと流れがわかる本",subject:"日本史",rounds:[
+    {round:"1周目",purpose:"時代の大きな流れを掴む",method:"通読して出来事のつながりをイメージしながら読み進める",criteria:"各時代の大きな流れを説明できる",caution:"年号・用語の暗記は後回しにする"},
+    {round:"2周目",purpose:"因果関係の理解を深める",method:"出来事同士の原因と結果を図式化しながら再読する",criteria:"主要な因果関係を説明できる",caution:"単純な暗記作業に戻らない"},
+    {round:"3周目",purpose:"用語・年号を流れの中で定着させる",method:"流れを踏まえた上で重要語句・年号を確認する",criteria:"重要用語を流れの中で説明できる",caution:"暗記のみに頼らず、必ず流れとセットで覚える"},
+  ]},
+];
+
+const PHASES = [
+  {range:[1,4],theme:"基礎固め① 全科目1周目",focus:"英数国の基礎interiorize、日本史の通読開始",subjects:"英語・数学・国語・日本史"},
+  {range:[5,8],theme:"基礎固め② 2周目突入",focus:"単語・文法の想起速度アップ、政経・情報Ⅰ着手",subjects:"英語・数学・国語・政経・情報Ⅰ"},
+  {range:[9,12],theme:"応用力養成・第3回模試対策",focus:"応用問題演習、模試を通じた失点要因の分析と修正",subjects:"全科目"},
+  {range:[13,16],theme:"仕上げ① プレ共通テスト対策",focus:"制限時間内演習、理科基礎の総復習",subjects:"全科目＋理科基礎"},
+  {range:[17,20],theme:"過去問演習期",focus:"共通テスト過去問・予想問題演習、弱点分野の補強",subjects:"全科目"},
+  {range:[21,24],theme:"直前総仕上げ・本番期",focus:"総復習、時間配分・体調管理の最終調整、本番シミュレーション",subjects:"全科目"},
+];
+
+const PLAN_START = new Date(2026,6,27);
+const WEEKLY_PLAN = Array.from({length:24},(_,i)=>{
+  const weekNum=i+1;
+  const start=new Date(PLAN_START); start.setDate(start.getDate()+i*7);
+  const end=new Date(start); end.setDate(end.getDate()+6);
+  const phase=PHASES.find(p=>weekNum>=p.range[0]&&weekNum<=p.range[1]);
+  const fmt=d=>`${d.getMonth()+1}/${d.getDate()}`;
+  return {week:weekNum,range:`${fmt(start)}〜${fmt(end)}`,theme:phase.theme,focus:phase.focus,subjects:phase.subjects};
+});
+
+const MONTHLY_ROADMAP = [
+  {month:"8月",goal:"基礎固め・全科目1周目完了",detail:"英数国の土台構築、日本史通読、学習リズムの確立"},
+  {month:"9月",goal:"2周目定着・弱点科目着手",detail:"政経・情報Ⅰ本格開始、既習範囲の想起速度を向上させる"},
+  {month:"10月",goal:"応用力強化・第3回模試（目標680）",detail:"応用問題演習を強化し、模試で課題を可視化する"},
+  {month:"11月",goal:"仕上げ・プレ共通テスト（目標730）",detail:"制限時間内演習を徹底し、理科基礎を総復習する"},
+  {month:"12月",goal:"過去問演習・総合力強化",detail:"共通テスト過去問演習を中心に、頻出分野を総復習する"},
+  {month:"1月",goal:"直前対策・本番（目標760）",detail:"総仕上げと体調管理を徹底し、本番シミュレーションを行う"},
+];
+
+/* ============================================================
+   状態管理（localStorageに永続化）
+   ============================================================ */
+function loadState(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(!raw) return structuredClone(fallback);
+    return JSON.parse(raw);
+  }catch(e){ return structuredClone(fallback); }
+}
+function saveState(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
+}
+
+let tasks = loadState(STORAGE_KEYS.tasks, DEFAULT_TASKS);
+let history = loadState(STORAGE_KEYS.history, []);
+let mocks = loadState(STORAGE_KEYS.mocks, DEFAULT_MOCKS);
+let taskIdSeq = Math.max(0, ...tasks.map(t=>t.id), ...history.map(h=>h.id||0)) + 1;
+
+let activeTab = "board";
+let expandedMaterial = KPI_MASTER[0].material;
+let planSubTab = "weekly";
+let newTaskDraft = { date: todayStr(), subject:"英語", material:"", task:"", kpi:"", target:"" };
+
+function persistTasks(){ saveState(STORAGE_KEYS.tasks, tasks); }
+function persistHistory(){ saveState(STORAGE_KEYS.history, history); }
+function persistMocks(){ saveState(STORAGE_KEYS.mocks, mocks); }
+
+/* ============================================================
+   ユーティリティ
+   ============================================================ */
+function todayStr(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+function fmtDate(iso){
+  if(!iso) return "";
+  const [y,m,d]=iso.split("-");
+  return `${y}/${m}/${d}`;
+}
+function nowStamp(){
+  const d=new Date();
+  return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+function esc(str){
+  return String(str==null?"":str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function subjectBadge(subject){
+  return `<span class="badge subj-${esc(subject)}">${esc(subject)}</span>`;
+}
+function dateBadge(date){
+  const today = todayStr();
+  if(date < today) return `<span class="badge-date badge-carry">繰り越し</span>`;
+  if(date === today) return `<span class="badge-date badge-today">本日</span>`;
+  return `<span class="badge-date badge-future">予定</span>`;
+}
+
+/* ============================================================
+   ナビゲーション
+   ============================================================ */
+const NAV_ITEMS = [
+  {key:"board", label:"タスク管理ボード", icon:ICONS.board},
+  {key:"history", label:"学習履歴ログ", icon:ICONS.history},
+  {key:"mock", label:"模試ダッシュボード", icon:ICONS.mock},
+  {key:"kpi", label:"教材別攻略ポイント", icon:ICONS.kpi},
+  {key:"plan", label:"週間計画・月間ロードマップ", icon:ICONS.plan},
+];
+
+function renderNav(){
+  const nav = document.getElementById("nav");
+  nav.innerHTML = NAV_ITEMS.map(item=>{
+    let count = "";
+    if(item.key==="board"){
+      const remain = tasks.filter(t=>!t.checked).length;
+      if(remain>0) count = `<span class="badge-count">${remain}</span>`;
+    }
+    if(item.key==="history" && history.length>0){
+      count = `<span class="badge-count">${history.length}</span>`;
+    }
+    return `<button class="nav-item ${activeTab===item.key?'active':''}" data-nav="${item.key}">
+      ${item.icon}<span>${item.label}</span>${count}
+    </button>`;
+  }).join("");
+
+  document.getElementById("countdown-days").textContent = countdownDays()+" 日";
+}
+function countdownDays(){
+  const target = new Date(2027,0,16);
+  const now = new Date();
+  return Math.ceil((target-now)/(1000*60*60*24));
+}
+
+/* ============================================================
+   ① タスク管理ボード
+   ============================================================ */
+function renderBoard(){
+  const sorted = [...tasks].sort((a,b)=> a.date<b.date?-1:a.date>b.date?1:a.id-b.id);
+  const completedCount = tasks.filter(t=>t.checked).length;
+
+  const rows = sorted.map((t,idx)=>`
+    <tr data-id="${t.id}" class="${t.checked?'row-done':''}">
+      <td><div>${fmtDate(t.date)}</div>${dateBadge(t.date)}</td>
+      <td style="text-align:center;">
+        <button class="chk-btn ${t.checked?'checked':''}" data-action="toggle" data-id="${t.id}">
+          ${t.checked?ICONS.checkCircle:ICONS.circle}
+        </button>
+      </td>
+      <td>${subjectBadge(t.subject)}</td>
+      <td>${esc(t.material)}</td>
+      <td>${esc(t.task)}</td>
+      <td class="kpi-text">${esc(t.kpi)}</td>
+      <td style="text-align:center;color:var(--tx-400);">${t.target||"-"}</td>
+      <td style="text-align:center;">
+        <input type="number" min="0" class="actual-input" data-action="actual" data-id="${t.id}" value="${esc(t.actual)}" placeholder="-" />
+      </td>
+      <td>
+        <input type="text" class="memo-input" data-action="memo" data-id="${t.id}" value="${esc(t.memo)}" placeholder="メモを入力" />
+      </td>
+      <td style="text-align:center;">
+        <button class="del-btn" data-action="delete" data-id="${t.id}">${ICONS.trash}</button>
+      </td>
+    </tr>`).join("");
+
+  document.getElementById("content").innerHTML = `
+    <div class="top-row">
+      <div class="section-head">
+        <h2>タスク管理ボード（今日やること）</h2>
+        <p>未完了タスクは日付を問わずボード上に残り続けます。完了したタスクのみ記録・削除されます。</p>
+      </div>
+      <button id="btn-record" class="btn ${completedCount===0?'btn-disabled':'btn-success'}" ${completedCount===0?'disabled':''}>
+        ${ICONS.reset} 記録＆リセット（完了 ${completedCount} 件）
+      </button>
+    </div>
+
+    <div class="panel">
+      <div class="table-scroll">
+        <table>
+          <thead><tr>
+            <th style="width:110px;">予定日付</th>
+            <th style="width:48px;text-align:center;">完了</th>
+            <th style="width:90px;">科目</th>
+            <th style="width:160px;">教材</th>
+            <th style="width:220px;">タスク内容</th>
+            <th style="width:280px;">KPI（学習目的・意識ポイント）</th>
+            <th style="width:70px;text-align:center;">目標(分)</th>
+            <th style="width:80px;text-align:center;">実績(分)</th>
+            <th style="width:160px;">メモ・NG問</th>
+            <th style="width:36px;"></th>
+          </tr></thead>
+          <tbody>${rows || `<tr><td colspan="10" class="empty-state">タスクがありません。下のフォームから追加してください。</td></tr>`}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="add-form">
+      <div class="add-form-label">新規タスクを追加</div>
+      <div class="add-grid">
+        <input type="date" id="nt-date" value="${newTaskDraft.date}" />
+        <select id="nt-subject">${SUBJECTS.map(s=>`<option value="${s}" ${newTaskDraft.subject===s?'selected':''}>${s}</option>`).join("")}</select>
+        <input type="text" id="nt-material" placeholder="教材名" value="${esc(newTaskDraft.material)}" />
+        <input type="text" id="nt-task" placeholder="タスク内容（ページ・問題番号）" value="${esc(newTaskDraft.task)}" />
+        <input type="text" id="nt-kpi" placeholder="KPI・意識ポイント" value="${esc(newTaskDraft.kpi)}" />
+        <input type="number" id="nt-target" placeholder="目標分" value="${esc(newTaskDraft.target)}" />
+      </div>
+      <button id="btn-add-task" class="btn btn-primary" style="margin-top:12px;">${ICONS.plus} タスクを追加</button>
+    </div>
+  `;
+
+  document.getElementById("btn-record").onclick = recordAndReset;
+  document.getElementById("btn-add-task").onclick = addTask;
+
+  document.querySelectorAll('[data-action="toggle"]').forEach(el=>{
+    el.onclick = ()=>{
+      const id = Number(el.dataset.id);
+      const t = tasks.find(x=>x.id===id);
+      t.checked = !t.checked;
+      persistTasks();
+      renderBoard();
+      renderNav();
+    };
+  });
+  document.querySelectorAll('[data-action="actual"]').forEach(el=>{
+    el.oninput = ()=>{
+      const id = Number(el.dataset.id);
+      tasks.find(x=>x.id===id).actual = el.value;
+      persistTasks();
+    };
+  });
+  document.querySelectorAll('[data-action="memo"]').forEach(el=>{
+    el.oninput = ()=>{
+      const id = Number(el.dataset.id);
+      tasks.find(x=>x.id===id).memo = el.value;
+      persistTasks();
+    };
+  });
+  document.querySelectorAll('[data-action="delete"]').forEach(el=>{
+    el.onclick = ()=>{
+      const id = Number(el.dataset.id);
+      tasks = tasks.filter(x=>x.id!==id);
+      persistTasks();
+      renderBoard();
+      renderNav();
+    };
+  });
+
+  // 追加フォームの入力を保持（再描画されても値が残るように draft を更新）
+  ["date","subject","material","task","kpi","target"].forEach(field=>{
+    const el = document.getElementById("nt-"+field);
+    el.addEventListener("input", ()=> newTaskDraft[field]=el.value);
+    el.addEventListener("change", ()=> newTaskDraft[field]=el.value);
+  });
+}
+
+function addTask(){
+  const material = document.getElementById("nt-material").value.trim();
+  const task = document.getElementById("nt-task").value.trim();
+  if(!material || !task) return;
+  tasks.push({
+    id: taskIdSeq++,
+    date: document.getElementById("nt-date").value || todayStr(),
+    checked: false,
+    subject: document.getElementById("nt-subject").value,
+    material,
+    task,
+    kpi: document.getElementById("nt-kpi").value,
+    target: document.getElementById("nt-target").value === "" ? "" : Number(document.getElementById("nt-target").value),
+    actual: "",
+    memo: "",
+  });
+  persistTasks();
+  newTaskDraft = { date: todayStr(), subject:"英語", material:"", task:"", kpi:"", target:"" };
+  renderBoard();
+  renderNav();
+}
+
+function recordAndReset(){
+  const done = tasks.filter(t=>t.checked);
+  if(done.length===0) return;
+  const stamp = nowStamp();
+  history = [...done.map(t=>({...t, executedAt: stamp})), ...history];
+  tasks = tasks.filter(t=>!t.checked);
+  persistTasks();
+  persistHistory();
+  renderBoard();
+  renderNav();
+}
+
+/* ============================================================
+   ② 学習履歴ログ
+   ============================================================ */
+function renderHistory(){
+  const rows = history.map(h=>`
+    <tr>
+      <td style="white-space:nowrap;color:var(--tx-300);">${esc(h.executedAt)}</td>
+      <td style="white-space:nowrap;color:var(--tx-500);">${fmtDate(h.date)}</td>
+      <td>${subjectBadge(h.subject)}</td>
+      <td>${esc(h.material)}</td>
+      <td>${esc(h.task)}</td>
+      <td class="kpi-text">${esc(h.kpi)}</td>
+      <td style="text-align:center;white-space:nowrap;">${h.target||"-"} / ${h.actual||"-"}</td>
+      <td class="kpi-text">${esc(h.memo)||"-"}</td>
+    </tr>`).join("");
+
+  document.getElementById("content").innerHTML = `
+    <div class="section-head">
+      <h2>学習履歴ログ</h2>
+      <p>「記録＆リセット」で確定した完了タスクのタイムラインです。</p>
+    </div>
+    ${history.length===0 ? `
+      <div class="panel"><div class="empty-state">まだ記録がありません。タスク管理ボードでタスクを完了し、「記録＆リセット」を押してください。</div></div>
+    ` : `
+      <div class="panel"><div class="table-scroll"><table>
+        <thead><tr>
+          <th>実行日時</th><th>予定日付</th><th>科目</th><th>教材</th><th>タスク</th><th>KPI</th><th style="text-align:center;">目標/実績(分)</th><th>メモ</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div></div>
+    `}
+  `;
+}
+
+/* ============================================================
+   ③ 模試ダッシュボード
+   ============================================================ */
+function renderMock(){
+  document.getElementById("content").innerHTML = `
+    <div class="section-head">
+      <h2>模試ダッシュボード＆ギャップ分析</h2>
+      <p>得点を入力すると現状合計・目標とのギャップが自動計算されます。</p>
+    </div>
+    <div id="mock-list"></div>
+  `;
+  const list = document.getElementById("mock-list");
+  list.innerHTML = mocks.map(m=>mockCardHTML(m)).join("");
+
+  mocks.forEach(m=>{
+    MOCK_SUBJECT_KEYS.forEach(k=>{
+      const el = document.querySelector(`[data-mock-score="${m.id}-${k}"]`);
+      el.oninput = ()=>{
+        m.scores[k] = el.value === "" ? "" : Number(el.value);
+        persistMocks();
+        updateMockStats(m.id);
+      };
+    });
+    document.querySelector(`[data-mock-field="${m.id}-issues"]`).oninput = (e)=>{ m.issues = e.target.value; persistMocks(); };
+    document.querySelector(`[data-mock-field="${m.id}-action"]`).oninput = (e)=>{ m.action = e.target.value; persistMocks(); };
+  });
+}
+function mockCardHTML(m){
+  const currentTotal = MOCK_SUBJECT_KEYS.reduce((sum,k)=> sum + (Number(m.scores[k])||0), 0);
+  const gap = currentTotal - m.target;
+  return `
+    <div class="mock-card" data-mock-card="${m.id}">
+      <div class="mock-head">
+        <div>
+          <div class="mock-name">${esc(m.name)}</div>
+          <div class="mock-date">実施予定日: ${fmtDate(m.date)}</div>
+        </div>
+        <div class="mock-stats">
+          <div class="mock-stat"><span>現状合計</span><b data-mock-total="${m.id}">${currentTotal}</b></div>
+          <div class="mock-stat"><span>目標合計</span><b style="color:var(--tx-300);">${m.target}</b></div>
+          <div class="mock-stat"><span>ギャップ</span><b data-mock-gap="${m.id}" class="${gap<0?'negative':'positive'}">${gap>0?'+'+gap:gap}</b></div>
+        </div>
+      </div>
+      <div class="mock-scores">
+        ${MOCK_SUBJECT_KEYS.map(k=>`
+          <div><label>${k}</label><input type="number" data-mock-score="${m.id}-${k}" value="${esc(m.scores[k])}" placeholder="-" /></div>
+        `).join("")}
+      </div>
+      <div class="mock-notes">
+        <div><label>失点要因・課題分析</label><textarea data-mock-field="${m.id}-issues" placeholder="未受験">${esc(m.issues)}</textarea></div>
+        <div><label>次回への計画修正アクション</label><textarea data-mock-field="${m.id}-action" placeholder="未受験">${esc(m.action)}</textarea></div>
+      </div>
+    </div>`;
+}
+function updateMockStats(id){
+  const m = mocks.find(x=>x.id===id);
+  const currentTotal = MOCK_SUBJECT_KEYS.reduce((sum,k)=> sum + (Number(m.scores[k])||0), 0);
+  const gap = currentTotal - m.target;
+  document.querySelector(`[data-mock-total="${id}"]`).textContent = currentTotal;
+  const gapEl = document.querySelector(`[data-mock-gap="${id}"]`);
+  gapEl.textContent = gap>0 ? '+'+gap : gap;
+  gapEl.className = gap<0 ? 'negative' : 'positive';
+}
+
+/* ============================================================
+   ④ 教材別攻略ポイント
+   ============================================================ */
+function renderKpi(){
+  document.getElementById("content").innerHTML = `
+    <div class="section-head">
+      <h2>教材別攻略ポイント（KPIマスタ）</h2>
+      <p>各教材の周回ごとの目的・取り組み方・完成基準をいつでも参照できます。</p>
+    </div>
+    <div id="kpi-list"></div>
+  `;
+  const list = document.getElementById("kpi-list");
+  list.innerHTML = KPI_MASTER.map(mat=>{
+    const open = expandedMaterial === mat.material;
+    return `
+      <div class="kpi-item">
+        <button class="kpi-toggle" data-kpi-toggle="${esc(mat.material)}">
+          <span class="chev">${open?ICONS.chevDown:ICONS.chevRight}</span>
+          <span>${esc(mat.material)}</span>
+          ${subjectBadge(mat.subject)}
+        </button>
+        ${open ? `
+          <div class="table-scroll">
+            <table>
+              <thead><tr>
+                <th style="width:70px;">周回</th><th>周回目的</th><th>具体的取り組み方</th><th>完成基準（到達レベル）</th><th>注意点・禁止事項</th>
+              </tr></thead>
+              <tbody>
+                ${mat.rounds.map(r=>`
+                  <tr>
+                    <td class="kpi-round">${r.round}</td>
+                    <td style="color:var(--tx-200);">${esc(r.purpose)}</td>
+                    <td class="kpi-text">${esc(r.method)}</td>
+                    <td class="kpi-text">${esc(r.criteria)}</td>
+                    <td class="kpi-text kpi-caution">${esc(r.caution)}</td>
+                  </tr>`).join("")}
+              </tbody>
+            </table>
+          </div>
+        ` : ""}
+      </div>`;
+  }).join("");
+
+  document.querySelectorAll('[data-kpi-toggle]').forEach(el=>{
+    el.onclick = ()=>{
+      const mat = el.dataset.kpiToggle;
+      expandedMaterial = expandedMaterial===mat ? null : mat;
+      renderKpi();
+    };
+  });
+}
+
+/* ============================================================
+   ⑤ 週間計画・月間ロードマップ
+   ============================================================ */
+function renderPlan(){
+  document.getElementById("content").innerHTML = `
+    <div class="section-head">
+      <h2>週間計画・月間ロードマップ</h2>
+      <p>24週間の学習フェーズと、月ごとの戦略目標を確認できます。</p>
+    </div>
+    <div class="plan-tabs">
+      <button class="btn btn-ghost ${planSubTab==='weekly'?'active':''}" data-plan-tab="weekly">週間計画（Week1〜24）</button>
+      <button class="btn btn-ghost ${planSubTab==='monthly'?'active':''}" data-plan-tab="monthly">月間ロードマップ</button>
+    </div>
+    <div id="plan-body"></div>
+  `;
+  document.querySelectorAll('[data-plan-tab]').forEach(el=>{
+    el.onclick = ()=>{ planSubTab = el.dataset.planTab; renderPlan(); };
+  });
+  const body = document.getElementById("plan-body");
+  if(planSubTab==="weekly"){
+    body.innerHTML = `
+      <div class="panel"><div class="week-scroll"><table>
+        <thead class="sticky"><tr>
+          <th style="width:80px;">週</th><th style="width:120px;">期間</th><th style="width:260px;">テーマ</th><th>重点科目</th><th>フォーカス</th>
+        </tr></thead>
+        <tbody>
+          ${WEEKLY_PLAN.map(w=>`
+            <tr>
+              <td style="color:var(--cyan-400);font-weight:700;">Week ${w.week}</td>
+              <td style="white-space:nowrap;color:var(--tx-400);">${w.range}</td>
+              <td style="color:var(--tx-100);">${esc(w.theme)}</td>
+              <td class="kpi-text">${esc(w.subjects)}</td>
+              <td class="kpi-text">${esc(w.focus)}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table></div></div>
+    `;
+  }else{
+    body.innerHTML = `
+      <div class="month-grid">
+        ${MONTHLY_ROADMAP.map(m=>`
+          <div class="month-card">
+            <div class="month-name">${m.month}</div>
+            <div class="month-goal">${esc(m.goal)}</div>
+            <div class="month-detail">${esc(m.detail)}</div>
+          </div>`).join("")}
+      </div>
+    `;
+  }
+}
+
+/* ============================================================
+   タブ切り替え・初期化
+   ============================================================ */
+const RENDERERS = { board:renderBoard, history:renderHistory, mock:renderMock, kpi:renderKpi, plan:renderPlan };
+
+function switchTab(tab){
+  activeTab = tab;
+  renderNav();
+  RENDERERS[tab]();
+}
+
+document.getElementById("nav").addEventListener("click", (e)=>{
+  const btn = e.target.closest("[data-nav]");
+  if(btn) switchTab(btn.dataset.nav);
+});
+
+renderNav();
+switchTab("board");
+</script>
+</body>
+</html>
